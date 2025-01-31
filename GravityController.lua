@@ -110,6 +110,9 @@ function GravityController.new(player)
 	self.Humanoid = player.Character:WaitForChild("Humanoid")
 	self.HRP = player.Character:WaitForChild("HumanoidRootPart")
 
+	self.AnimationHandler = AnimationHandler.new(self.Humanoid, self.Character:WaitForChild("Animate"))
+	self.AnimationHandler:EnableDefault(false)
+
 	self.StateTracker = StateTracker.new(self.Humanoid, true)
 	self.StateTracker.Changed:Connect(function(name, speed)
 		self.AnimationHandler:Run(name, speed)
@@ -164,6 +167,7 @@ function GravityController:Destroy()
 	self.StateTracker:Destroy()
 
 	self.Humanoid.PlatformStand = false
+	self.AnimationHandler:EnableDefault(true)
 
 	self.GravityUp = UNIT_Y
 end
