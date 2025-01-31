@@ -46,8 +46,7 @@ local UIS = game:GetService("UserInputService")
 local RUNSERVICE = game:GetService("RunService")
 
 local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))
-local CameraModifier = loadstring(game:HttpGet(""))
-local AnimationHandler = loadstring(game:HttpGet(""))
+local CameraModifier = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))
 
 -- Class
 
@@ -109,10 +108,6 @@ function GravityController.new(player)
 	self.Humanoid = player.Character:WaitForChild("Humanoid")
 	self.HRP = player.Character:WaitForChild("HumanoidRootPart")
 	
-	-- Animation
-	self.AnimationHandler = AnimationHandler.new(self.Humanoid, self.Character:WaitForChild("Animate"))
-	self.AnimationHandler:EnableDefault(false)
-	
 	-- Collider and forces
 	local collider, gyro, vForce, floor = InitObjects(self)
 	
@@ -161,7 +156,6 @@ function GravityController:Destroy()
 	self.Gyro:Destroy()
 	
 	self.Humanoid.PlatformStand = false
-	self.AnimationHandler:EnableDefault(true)
 	
 	self.GravityUp = UNIT_Y
 end
