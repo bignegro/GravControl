@@ -45,10 +45,9 @@ local WALKF = 200 / 3
 local UIS = game:GetService("UserInputService")
 local RUNSERVICE = game:GetService("RunService")
 
-local InitObjects = require(script:WaitForChild("InitObjects"))
-local CameraModifier = require(script:WaitForChild("CameraModifier"))
-local AnimationHandler = require(script:WaitForChild("AnimationHandler"))
-local StateTracker = require(script:WaitForChild("StateTracker"))
+local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))
+local CameraModifier = loadstring(game:HttpGet(""))
+local AnimationHandler = loadstring(game:HttpGet(""))
 
 -- Class
 
@@ -114,13 +113,6 @@ function GravityController.new(player)
 	self.AnimationHandler = AnimationHandler.new(self.Humanoid, self.Character:WaitForChild("Animate"))
 	self.AnimationHandler:EnableDefault(false)
 	
-	local soundState = player.PlayerScripts:WaitForChild("RbxCharacterSounds"):WaitForChild("SetState")
-	
-	self.StateTracker = StateTracker.new(self.Humanoid, soundState)
-	self.StateTracker.Changed:Connect(function(name, speed)
-		self.AnimationHandler:Run(name, speed)
-	end)
-	
 	-- Collider and forces
 	local collider, gyro, vForce, floor = InitObjects(self)
 	
@@ -167,7 +159,6 @@ function GravityController:Destroy()
 	self.Collider:Destroy()
 	self.VForce:Destroy()
 	self.Gyro:Destroy()
-	self.StateTracker:Destroy()
 	
 	self.Humanoid.PlatformStand = false
 	self.AnimationHandler:EnableDefault(true)
@@ -190,10 +181,9 @@ function GravityController:IsGrounded()
 end
 
 function GravityController:OnJumpRequest()
-	if (not self.StateTracker.Jumped and self:IsGrounded()) then
+	if self:IsGrounded()) then
 		local hrpVel = self.HRP.Velocity
 		self.HRP.Velocity = hrpVel + self.GravityUp*self.Humanoid.JumpPower*JUMPMODIFIER
-		self.StateTracker.Jumped = true
 	end
 end
 
@@ -274,9 +264,6 @@ function GravityController:OnGravityStep(dt)
 		local hlv = lv - charRotation.UpVector:Dot(lv)*charRotation.UpVector
 		charRotation = lookAt(ZERO, hlv, charRotation.UpVector)
 	end
-
-	-- get state
-	self.StateTracker:OnStep(self.GravityUp, self:IsGrounded(), isInputMoving)
 
 	-- update values
 	self.VForce.Force = walkForce + gForce
