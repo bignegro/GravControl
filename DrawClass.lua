@@ -1,5 +1,5 @@
-local Draw2DModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/DrawClassChildren/Draw2D.lua"))
-local Draw3DModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/DrawClassChildren/Draw3D.lua"))
+local Draw2DModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/DrawClassChildren/Draw2D.lua"))()
+local Draw3DModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/DrawClassChildren/Draw3D.lua"))()
 
 --
 
