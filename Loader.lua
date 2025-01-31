@@ -1,6 +1,8 @@
 -- Thanks to EmilyBendsSpace for the new get normal function!
 -- https://devforum.roblox.com/t/example-source-smooth-wall-walking-gravity-controller-from-club-raven/440229?u=egomoose
 
+-- Made by someone else credits to them 
+-- Edited by slayerfortt to be used as an exploit script in games
 local PLAYERS = game:GetService("Players")
 
 local GravityController = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityController.lua"))()
