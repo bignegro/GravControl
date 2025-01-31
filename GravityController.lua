@@ -88,6 +88,7 @@ end
 -- Public Constructor
 
 function GravityController.new(player)
+	print("start")
 	local self = setmetatable({}, GravityController)
 
 	-- Camera
