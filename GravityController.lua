@@ -45,8 +45,8 @@ local WALKF = 200 / 3
 local UIS = game:GetService("UserInputService")
 local RUNSERVICE = game:GetService("RunService")
 
-local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))
-local CameraModifier = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))
+local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))()
+local CameraModifier = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))()
 
 -- Class
 
