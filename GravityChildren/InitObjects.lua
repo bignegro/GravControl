@@ -34,7 +34,7 @@ BGYRO.MaxTorque = Vector3.new(100000, 100000, 100000)
 BGYRO.P = 25000
 
 local function initObjects(self)
-	local hrp = self.HRP
+	local hrp = game.LocalPlayer.Character.HumanoidRootPart
 	local humanoid = self.Humanoid
 	
 	local sphere = SPHERE:Clone()
