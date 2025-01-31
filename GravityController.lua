@@ -96,7 +96,7 @@ function GravityController.new(player)
 	if (not loaded) then
 		loaded.Changed:Wait()
 	end
-
+	print(require(player.PlayerScripts:WaitForChild("PlayerModule")))
 	local playerModule = require(player.PlayerScripts:WaitForChild("PlayerModule"))
 	self.Controls = playerModule:GetControls()
 	self.Camera = playerModule:GetCameras()
