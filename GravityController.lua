@@ -95,49 +95,49 @@ function GravityController.new(player)
 	if (not loaded) then
 		loaded.Changed:Wait()
 	end
-	
+
 	local playerModule = require(player.PlayerScripts:WaitForChild("PlayerModule"))
 	self.Controls = playerModule:GetControls()
 	self.Camera = playerModule:GetCameras()
-	
+
 	self.CameraModifier = CameraModifier.new(player)
-	
+
 	-- Player and character
 	self.Player = player
 	self.Character = player.Character
 	self.Humanoid = player.Character:WaitForChild("Humanoid")
 	self.HRP = player.Character:WaitForChild("HumanoidRootPart")
-	
+
 	-- Collider and forces
 	local collider, gyro, vForce, floor = InitObjects(self)
-	
+
 	floor.Touched:Connect(function() end)
-	
+
 	self.Collider = collider
 	self.VForce = vForce
 	self.Gyro = gyro
 	self.Floor = floor
-	
+
 	-- Gravity properties
 	self.GravityUp = UNIT_Y
 	self.FloorVelocity = ZERO
 	self.Ignores = {self.Character}
-	
+
 	function self.Camera.GetUpVector(this, oldUpVector)
 		return self.GravityUp
 	end
-	
+
 	-- Events etc
 	self.Humanoid.PlatformStand = true
-	
+
 	self.CharacterMass = getMass(self.Character:GetDescendants())
 	self.Character.AncestryChanged:Connect(function() self.CharacterMass = getMass(self.Character:GetDescendants()) end)
-	
+
 	self.JumpCon = UIS.JumpRequest:Connect(function() self:OnJumpRequest() end)
 	self.DeathCon = self.Humanoid.Died:Connect(function() self:Destroy() end)
 	self.SeatCon = self.Humanoid.Seated:Connect(function(active) if (active) then self:Destroy() end end)
 	RUNSERVICE:BindToRenderStep("GravityStep", Enum.RenderPriority.Input.Value + 1, function(dt) self:OnGravityStep(dt) end)
-	
+
 	return self
 end
 
@@ -147,16 +147,16 @@ function GravityController:Destroy()
 	self.JumpCon:Disconnect()
 	self.DeathCon:Disconnect()
 	self.SeatCon:Disconnect()
-	
+
 	RUNSERVICE:UnbindFromRenderStep("GravityStep")
-	
+
 	self.CameraModifier:Destroy()
 	self.Collider:Destroy()
 	self.VForce:Destroy()
 	self.Gyro:Destroy()
-	
+
 	self.Humanoid.PlatformStand = false
-	
+
 	self.GravityUp = UNIT_Y
 end
 
@@ -175,22 +175,22 @@ function GravityController:IsGrounded()
 end
 
 function GravityController:OnJumpRequest()
-	if self:IsGrounded()) then
-		local hrpVel = self.HRP.Velocity
-		self.HRP.Velocity = hrpVel + self.GravityUp*self.Humanoid.JumpPower*JUMPMODIFIER
-	end
+	if self:IsGrounded() then
+	local hrpVel = self.HRP.Velocity
+	self.HRP.Velocity = hrpVel + self.GravityUp*self.Humanoid.JumpPower*JUMPMODIFIER
+end
 end
 
 function GravityController:GetFloorVelocity()
 	local ray = Ray.new(self.Collider.Position, -1.1*self.GravityUp)
 	local hit, pos, normal = workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
-	
+
 	local velocity = ZERO
 	if (hit and hit:isA("BasePart")) then
 		-- assumes the center of mass of the part is part.CFrame.p
 		velocity = getPointVelocity(hit, self.HRP.Position)
 	end
-	
+
 	return velocity
 end
 
@@ -202,55 +202,55 @@ function GravityController:OnGravityStep(dt)
 	-- update gravity up vector
 	local oldGravity = self.GravityUp
 	local newGravity = self:GetGravityUp(oldGravity)
-	
+
 	local rotation = getRotationBetween(oldGravity, newGravity, workspace.CurrentCamera.CFrame.RightVector)
 	rotation = IDENTITYCF:Lerp(rotation, TRANSITION)
-	
+
 	self.GravityUp = rotation * oldGravity
-	
+
 	-- get world move vector
 	local camCF = workspace.CurrentCamera.CFrame
 	local fDot = camCF.LookVector:Dot(newGravity)
 	local cForward = math.abs(fDot) > 0.5 and -math.sign(fDot)*camCF.UpVector or camCF.LookVector
-	
+
 	local left = cForward:Cross(-newGravity).Unit
 	local forward = -left:Cross(newGravity).Unit
-	
+
 	local move = self:GetMoveVector()
 	local worldMove = forward*move.z - left*move.x
 	worldMove = worldMove:Dot(worldMove) > 1 and worldMove.Unit or worldMove
-	
+
 	local isInputMoving = worldMove:Dot(worldMove) > 0
-	
+
 	-- get the desired character cframe
 	local hrpCFLook = self.HRP.CFrame.LookVector
 	local charF = hrpCFLook:Dot(forward)*forward + hrpCFLook:Dot(left)*left
 	local charR = charF:Cross(newGravity).Unit
 	local newCharCF = CFrame.fromMatrix(ZERO, charR, newGravity, -charF)
-	
+
 	local newCharRotation = IDENTITYCF
 	if (isInputMoving) then
 		newCharRotation = IDENTITYCF:Lerp(getRotationBetween(charF, worldMove, newGravity), 0.7)	
 	end
-	
+
 	-- calculate forces
 	local g = workspace.Gravity
 	local gForce = g * self.CharacterMass * (UNIT_Y - newGravity)
-	
+
 	local cVelocity = self.HRP.Velocity
 	local tVelocity = self.Humanoid.WalkSpeed * worldMove
 	local gVelocity = cVelocity:Dot(newGravity)*newGravity
 	local hVelocity = cVelocity - gVelocity
 	local fVelocity = self:GetFloorVelocity()
-	
+
 	if (hVelocity:Dot(hVelocity) < 1) then
 		hVelocity = ZERO
 	end
-	
+
 	local dVelocity = tVelocity - hVelocity + fVelocity
 	local walkForceM = math.min(10000, WALKF * self.CharacterMass * dVelocity.Magnitude)
 	local walkForce = walkForceM > 0 and dVelocity.Unit*walkForceM or ZERO
-	
+
 	-- mouse lock
 	local charRotation = newCharRotation * newCharCF
 	if (self.CameraModifier.IsCamLocked) then
