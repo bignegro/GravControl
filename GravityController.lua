@@ -110,6 +110,11 @@ function GravityController.new(player)
 	self.Humanoid = player.Character:WaitForChild("Humanoid")
 	self.HRP = player.Character:WaitForChild("HumanoidRootPart")
 
+	self.StateTracker = StateTracker.new(self.Humanoid, true)
+	self.StateTracker.Changed:Connect(function(name, speed)
+		self.AnimationHandler:Run(name, speed)
+	end)
+	
 	-- Collider and forces
 	local collider, gyro, vForce, floor = InitObjects(self)
 
@@ -156,6 +161,7 @@ function GravityController:Destroy()
 	self.Collider:Destroy()
 	self.VForce:Destroy()
 	self.Gyro:Destroy()
+	self.StateTracker:Destroy()
 
 	self.Humanoid.PlatformStand = false
 
@@ -177,9 +183,10 @@ function GravityController:IsGrounded()
 end
 
 function GravityController:OnJumpRequest()
-	if self:IsGrounded() then
+	if (not self.StateTracker.Jumped and self:IsGrounded()) then
 	local hrpVel = self.HRP.Velocity
 	self.HRP.Velocity = hrpVel + self.GravityUp*self.Humanoid.JumpPower*JUMPMODIFIER
+	self.StateTracker.Jumped = true
 end
 end
 
@@ -261,6 +268,7 @@ function GravityController:OnGravityStep(dt)
 		charRotation = lookAt(ZERO, hlv, charRotation.UpVector)
 	end
 
+	self.StateTracker:OnStep(self.GravityUp, self:IsGrounded(), isInputMoving)
 	-- update values
 	self.VForce.Force = walkForce + gForce
 	self.Gyro.CFrame = charRotation
