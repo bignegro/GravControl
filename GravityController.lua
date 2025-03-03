@@ -214,7 +214,7 @@ end
 function GravityController:OnGravityStep(dt)
 	-- update gravity up vector
 	local oldGravity = self.GravityUp
-	local newGravity = self:GetGravityUp(oldGravity)
+	local newGravity = oldGravity
 
 	local rotation = getRotationBetween(oldGravity, newGravity, workspace.CurrentCamera.CFrame.RightVector)
 	rotation = IDENTITYCF:Lerp(rotation, TRANSITION)
