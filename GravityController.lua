@@ -47,8 +47,8 @@ local RUNSERVICE = game:GetService("RunService")
 
 local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))()
 local CameraModifier = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))()
-local AnimationHandler = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/AnimationHandler.lua"))()
-local StateTracker = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/StateTracker.lua"))()
+--local AnimationHandler = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/AnimationHandler.lua"))()
+--local StateTracker = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/StateTracker.lua"))()
 
 -- Class
 
@@ -110,13 +110,13 @@ function GravityController.new(player)
 	self.Humanoid = player.Character:WaitForChild("Humanoid")
 	self.HRP = player.Character:WaitForChild("HumanoidRootPart")
 
-	self.AnimationHandler = AnimationHandler.new(self.Humanoid, self.Character:WaitForChild("Animate"))
-	self.AnimationHandler:EnableDefault(false)
+	--self.AnimationHandler = AnimationHandler.new(self.Humanoid, self.Character:WaitForChild("Animate"))
+	--self.AnimationHandler:EnableDefault(false)
 
-	self.StateTracker = StateTracker.new(self.Humanoid, true)
-	self.StateTracker.Changed:Connect(function(name, speed)
-		self.AnimationHandler:Run(name, speed)
-	end)
+	--self.StateTracker = StateTracker.new(self.Humanoid, true)
+	--self.StateTracker.Changed:Connect(function(name, speed)
+		--self.AnimationHandler:Run(name, speed)
+	---end)
 	
 	-- Collider and forces
 	local collider, gyro, vForce, floor = InitObjects(self)
@@ -164,10 +164,10 @@ function GravityController:Destroy()
 	self.Collider:Destroy()
 	self.VForce:Destroy()
 	self.Gyro:Destroy()
-	self.StateTracker:Destroy()
+	--self.StateTracker:Destroy()
 
 	self.Humanoid.PlatformStand = false
-	self.AnimationHandler:EnableDefault(true)
+	-self.AnimationHandler:EnableDefault(true)
 
 	self.GravityUp = UNIT_Y
 end
@@ -187,10 +187,10 @@ function GravityController:IsGrounded()
 end
 
 function GravityController:OnJumpRequest()
-	if (not self.StateTracker.Jumped and self:IsGrounded()) then
+	if (--[[not self.StateTracker.Jumped and--]] self:IsGrounded()) then
 	local hrpVel = self.HRP.Velocity
 	self.HRP.Velocity = hrpVel + self.GravityUp*self.Humanoid.JumpPower*JUMPMODIFIER
-	self.StateTracker.Jumped = true
+	--self.StateTracker.Jumped = true
 end
 end
 
@@ -272,7 +272,7 @@ function GravityController:OnGravityStep(dt)
 		charRotation = lookAt(ZERO, hlv, charRotation.UpVector)
 	end
 
-	self.StateTracker:OnStep(self.GravityUp, self:IsGrounded(), isInputMoving)
+	--self.StateTracker:OnStep(self.GravityUp, self:IsGrounded(), isInputMoving)
 	-- update values
 	self.VForce.Force = walkForce + gForce
 	self.Gyro.CFrame = charRotation
