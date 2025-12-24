@@ -4,6 +4,7 @@
 -- Made by someone else credits to them 
 -- Edited by slayerfortt to be used as an exploit script in games
 local PLAYERS = game:GetService("Players")
+local LP = PLAYERS.LocalPlayer
 
 local GravityController = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityController.lua"))()
 local Controller = GravityController.new(PLAYERS.LocalPlayer)
@@ -98,7 +99,7 @@ function GetGravityUp(self, oldGravityUp)
 		local dir = (FEELER_RADIUS * offset + LOWER_RADIUS_OFFSET * -oldGravityUp).unit
 		local feelerOrigin = origin - FEELER_APEX_OFFSET * -oldGravityUp + FEELER_START_OFFSET * dir
 		local ray = Ray.new(feelerOrigin, FEELER_LENGTH * dir)
-		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, {LP.Character})
 
 		--DrawClass.Draw3D.Ray(ray.Origin, ray.Direction)
 
