@@ -10,6 +10,7 @@ FIXED jump + FIXED camera + FIXED raycast ignores
 local ZERO = Vector3.zero
 local UNIT_Y = Vector3.yAxis
 local IDENTITYCF = CFrame.identity
+local plr
 
 local WALKF = 200 / 3
 local TRANSITION = 0.15
@@ -69,6 +70,7 @@ end
 --////////////////////////////////////////////////////////////
 
 function GravityController.new(player)
+	plr = player
 	if not game:IsLoaded() then
 		game.Loaded:Wait()
 	end
@@ -197,9 +199,9 @@ function GravityController:GetFloorVelocity()
 		self.Collider.Position,
 		-self.GravityUp * FLOOR_RAY
 	)
-
+print("new")
 	local hit =
-		workspace:FindPartOnRayWithIgnoreList(ray, { self.Character })
+		workspace:FindPartOnRayWithIgnoreList(ray, { plr.Character })
 
 	if hit and hit:IsA("BasePart") then
 		return getPointVelocity(hit, self.HRP.Position)
