@@ -47,6 +47,8 @@ local RUNSERVICE = game:GetService("RunService")
 
 local InitObjects = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))()
 local CameraModifier = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))()
+
+local Player = game.Players.LocalPlayer
 --local AnimationHandler = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/AnimationHandler.lua"))()
 --local StateTracker = loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/StateTracker.lua"))()
 
@@ -127,11 +129,12 @@ function GravityController.new(player)
 	self.VForce = vForce
 	self.Gyro = gyro
 	self.Floor = floor
-
+	local char
+	repeat char = Player.Character until char ~= nil
 	-- Gravity properties
 	self.GravityUp = UNIT_Y
 	self.FloorVelocity = ZERO
-	self.Ignores = {self.Character}
+	self.Ignores = {char}
 
 	function self.Camera.GetUpVector(this, oldUpVector)
 		return self.GravityUp
@@ -196,14 +199,7 @@ end
 
 function GravityController:GetFloorVelocity()
 	local ray = Ray.new(self.Collider.Position, -1.1*self.GravityUp)
-	for i, v in self.Ignores do 
-		print(v.Name)
-		if not v.Name then
-			for i, v in v do 
-				print(v.Name) 
-			end
-		end
-	end
+	
 	local hit, pos, normal = workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
 
 	local velocity = ZERO
