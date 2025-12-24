@@ -44,7 +44,7 @@ function GetGravityUp(self, oldGravityUp)
 
 	local centerRayLength = 25
 	local centerRay = Ray.new(origin, -centerRayLength * oldGravityUp)
-	local centerHit, centerHitPoint, centerHitNormal = workspace:FindPartOnRayWithIgnoreList(centerRay, ignoreList)
+	local centerHit, centerHitPoint, centerHitNormal = workspace:FindPartOnRayWithIgnoreList(centerRay, {LP.Character})
 
 	--DrawClass:Clear()
 	--DrawClass.Draw3D.Ray(centerRay.Origin, centerRay.Direction)
@@ -74,7 +74,7 @@ function GetGravityUp(self, oldGravityUp)
 		local offset = CFrame.fromAxisAngle(oldGravityUp, dtheta) * radialVector
 		local dir = (LOWER_RADIUS_OFFSET * -oldGravityUp + (endRadius - startRadius) * offset)
 		local ray = Ray.new(origin + startRadius * offset, downRayLength * dir.unit)
-		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, {LP.Character})
 
 		--DrawClass.Draw3D.Ray(ray.Origin, ray.Direction)
 
