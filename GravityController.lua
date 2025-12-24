@@ -1,4 +1,4 @@
---[[
+	--[[
 	
 This is a class that provides custom physics that allows things like walking upside down or on planets, etc
 
@@ -200,7 +200,7 @@ end
 function GravityController:GetFloorVelocity()
 	local ray = Ray.new(self.Collider.Position, -1.1*self.GravityUp)
 	
-	local hit, pos, normal = workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
+	local hit, pos, normal = workspace:FindPartOnRayWithIgnoreList(ray, {Player.Character})
 
 	local velocity = ZERO
 	if (hit and hit:isA("BasePart")) then
