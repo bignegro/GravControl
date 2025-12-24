@@ -198,6 +198,11 @@ function GravityController:GetFloorVelocity()
 	local ray = Ray.new(self.Collider.Position, -1.1*self.GravityUp)
 	for i, v in self.Ignores do 
 		print(v.Name)
+		if not v.Name then
+			for i, v in v do 
+				print(v.Name) 
+			end
+		end
 	end
 	local hit, pos, normal = workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
 
