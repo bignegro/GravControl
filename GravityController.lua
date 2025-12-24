@@ -70,6 +70,8 @@ end
 --////////////////////////////////////////////////////////////
 
 function GravityController.new(player)
+	print("jews")
+	task.wait(3)
 	plr = player
 	if not game:IsLoaded() then
 		game.Loaded:Wait()
@@ -195,6 +197,7 @@ function GravityController:IsGrounded()
 end
 
 function GravityController:GetFloorVelocity()
+	print("floor")
 	local ray = Ray.new(
 		self.Collider.Position,
 		-self.GravityUp * FLOOR_RAY
