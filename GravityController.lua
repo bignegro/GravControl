@@ -1,14 +1,8 @@
 --[[
 
 GravityController
-Fixed + wall-walk capable version
-
-Place:
-- GravityController (ReplicatedStorage)
-- Animate (StarterCharacterScripts)
-- PlayerScriptsLoaded (StarterPlayerScripts)
-
-Walks on walls, ceilings, slopes, arbitrary geometry.
+Wall-walk / ceiling-walk controller
+FIXED jump + FIXED camera + FIXED raycast ignores
 
 ]]
 
@@ -17,9 +11,8 @@ local ZERO = Vector3.zero
 local UNIT_Y = Vector3.yAxis
 local IDENTITYCF = CFrame.identity
 
-local JUMPMODIFIER = 1.2
-local TRANSITION = 0.15
 local WALKF = 200 / 3
+local TRANSITION = 0.15
 local FLOOR_RAY = 4
 
 --// Services
@@ -28,17 +21,21 @@ local RUNSERVICE = game:GetService("RunService")
 
 --// External modules
 local InitObjects =
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"))()
+	loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/InitObjects.lua"
+	))()
 
 local CameraModifier =
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"))()
+	loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/bignegro/GravControl/refs/heads/main/GravityChildren/CameraModifier.lua"
+	))()
 
 --// Class
 local GravityController = {}
 GravityController.__index = GravityController
 
 --////////////////////////////////////////////////////////////
--- Utility
+-- Utilities
 --////////////////////////////////////////////////////////////
 
 local function getRotationBetween(u, v, axis)
@@ -48,12 +45,6 @@ local function getRotationBetween(u, v, axis)
 	end
 	local cross = u:Cross(v)
 	return CFrame.new(0, 0, 0, cross.X, cross.Y, cross.Z, 1 + dot)
-end
-
-local function lookAt(pos, forward, up)
-	local r = forward:Cross(up).Unit
-	local u = r:Cross(forward).Unit
-	return CFrame.fromMatrix(pos, r, u)
 end
 
 local function getMass(parts)
@@ -110,7 +101,6 @@ function GravityController.new(player)
 	-- State
 	self.GravityUp = UNIT_Y
 	self.CharacterMass = getMass(self.Character:GetDescendants())
-	self.Ignores = { self.Character }
 
 	self.Humanoid.PlatformStand = true
 
@@ -150,7 +140,7 @@ function GravityController.new(player)
 end
 
 --////////////////////////////////////////////////////////////
--- Destruction
+-- Destroy
 --////////////////////////////////////////////////////////////
 
 function GravityController:Destroy()
@@ -170,7 +160,7 @@ function GravityController:Destroy()
 end
 
 --////////////////////////////////////////////////////////////
--- Gravity logic (WALL WALKING)
+-- Gravity (wall walking)
 --////////////////////////////////////////////////////////////
 
 function GravityController:GetGravityUp(oldUp)
@@ -179,8 +169,8 @@ function GravityController:GetGravityUp(oldUp)
 		-oldUp * FLOOR_RAY
 	)
 
-	local hit, pos, normal =
-		workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
+	local hit, _, normal =
+		workspace:FindPartOnRayWithIgnoreList(ray, { self.Character })
 
 	if hit and hit:IsA("BasePart") then
 		return normal
@@ -208,7 +198,9 @@ function GravityController:GetFloorVelocity()
 		-self.GravityUp * FLOOR_RAY
 	)
 
-	local hit = workspace:FindPartOnRayWithIgnoreList(ray, self.Ignores)
+	local hit =
+		workspace:FindPartOnRayWithIgnoreList(ray, { self.Character })
+
 	if hit and hit:IsA("BasePart") then
 		return getPointVelocity(hit, self.HRP.Position)
 	end
@@ -217,13 +209,18 @@ function GravityController:GetFloorVelocity()
 end
 
 --////////////////////////////////////////////////////////////
--- Jump
+-- Jump (FIXED — no velocity stacking)
 --////////////////////////////////////////////////////////////
 
 function GravityController:OnJump()
-	if self:IsGrounded() then
-		self.HRP.Velocity += self.GravityUp * self.Humanoid.JumpPower * JUMPMODIFIER
-	end
+	if not self:IsGrounded() then return end
+
+	local vel = self.HRP.Velocity
+	local lateral = vel - vel:Dot(self.GravityUp) * self.GravityUp
+
+	self.HRP.Velocity =
+		lateral +
+		self.GravityUp * self.Humanoid.JumpPower
 end
 
 --////////////////////////////////////////////////////////////
@@ -231,15 +228,19 @@ end
 --////////////////////////////////////////////////////////////
 
 function GravityController:Step(dt)
-	-- Gravity direction
+	-- Gravity smoothing
 	local oldUp = self.GravityUp
-	local targetUp = self:GetGravityUp(oldUp)
-	targetUp = targetUp.Unit
+	local targetUp = self:GetGravityUp(oldUp).Unit
 
 	local rot =
-		getRotationBetween(oldUp, targetUp, workspace.CurrentCamera.CFrame.RightVector)
+		getRotationBetween(
+			oldUp,
+			targetUp,
+			workspace.CurrentCamera.CFrame.RightVector
+		)
 
-	self.GravityUp = (IDENTITYCF:Lerp(rot, TRANSITION)) * oldUp
+	self.GravityUp =
+		(IDENTITYCF:Lerp(rot, TRANSITION)) * oldUp
 
 	-- Camera-relative movement
 	local camCF = workspace.CurrentCamera.CFrame
@@ -259,18 +260,19 @@ function GravityController:Step(dt)
 		worldMove = worldMove.Unit
 	end
 
-	-- Character rotation
-	local look = self.HRP.CFrame.LookVector
-	local charF =
-		look:Dot(forward) * forward +
-		look:Dot(left) * left
+	-- Camera-driven yaw (mouse look FIX)
+	local camLook = camCF.LookVector
+	local flatLook =
+		camLook - camLook:Dot(self.GravityUp) * self.GravityUp
 
-	local charR = charF:Cross(self.GravityUp).Unit
-	local charCF = CFrame.fromMatrix(ZERO, charR, self.GravityUp, -charF)
-
-	if worldMove.Magnitude > 0 then
-		charCF *= getRotationBetween(charF, worldMove, self.GravityUp)
+	if flatLook.Magnitude > 0 then
+		flatLook = flatLook.Unit
+	else
+		flatLook = self.HRP.CFrame.LookVector
 	end
+
+	local right = flatLook:Cross(self.GravityUp).Unit
+	local charCF = CFrame.fromMatrix(ZERO, right, self.GravityUp, -flatLook)
 
 	-- Forces
 	local gForce =
