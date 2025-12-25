@@ -1,5 +1,5 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local UserGameSettings = UserSettings():GetService("UserGameSettings")
 
 local CameraModifier = {}
 CameraModifier.__index = CameraModifier
@@ -7,57 +7,38 @@ CameraModifier.__index = CameraModifier
 function CameraModifier.new(player, controller)
 	local self = setmetatable({}, CameraModifier)
 
-	local playerModule = player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")
+	local playerModule = player.PlayerScripts:WaitForChild("PlayerModule")
 	local cameraModule = require(playerModule:WaitForChild("CameraModule"))
 
-	-- Force camera module to initialize
-	cameraModule:ActivateCamera()
+	-- Get the ACTIVE camera instance (this is the real one)
+	local cam = cameraModule:GetCamera()
+	assert(cam, "Failed to get active camera")
 
-	-- THIS is the real camera instance Roblox uses
-	local cam = cameraModule.activeCamera
-	assert(cam, "activeCamera not found")
-
-	self.CameraModule = cameraModule
-	self.ActiveCamera = cam
+	self.Camera = cam
 	self.Controller = controller
 
-	-- Save original Update
-	self._oldUpdate = cam.Update
+	-- Store originals
+	self._oldGetUpVector = cam.GetUpVector
+	self._oldUpdateMouseBehavior = cam.UpdateMouseBehavior
 
-	-- 🔥 PATCH THE *INSTANCE* UPDATE
-	function cam:Update(dt)
-		-- Normal Roblox camera behavior
-		self:_oldUpdate(dt)
+	-- 🔒 Lock mouse so camera actually turns
+	function cam:UpdateMouseBehavior()
+		UserGameSettings.RotationType = Enum.RotationType.MovementRelative
+		UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+	end
 
-		local camera = workspace.CurrentCamera
-		local up = controller.GravityUp
-
-		-- Skip if gravity is normal
-		if up:Dot(Vector3.yAxis) > 0.999 then
-			return
-		end
-
-		-- Apply gravity roll
-		local cf = camera.CFrame
-		local worldUp = Vector3.yAxis
-
-		local axis = worldUp:Cross(up)
-		if axis.Magnitude < 1e-4 then
-			return
-		end
-
-		local angle = math.acos(math.clamp(worldUp:Dot(up), -1, 1))
-		local rot = CFrame.fromAxisAngle(axis.Unit, angle)
-
-		camera.CFrame = rot * cf
+	-- 🌍 Gravity-relative yaw axis
+	function cam:GetUpVector()
+		return controller.GravityUp
 	end
 
 	return self
 end
 
 function CameraModifier:Destroy()
-	if self.ActiveCamera and self._oldUpdate then
-		self.ActiveCamera.Update = self._oldUpdate
+	if self.Camera then
+		self.Camera.GetUpVector = self._oldGetUpVector
+		self.Camera.UpdateMouseBehavior = self._oldUpdateMouseBehavior
 	end
 end
 
