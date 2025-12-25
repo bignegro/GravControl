@@ -37,24 +37,29 @@ function CameraModifier.new(player, controller)
 
 	-- Camera roll alignment
 	RunService:BindToRenderStep(
-		"GravityCameraAlign",
-		Enum.RenderPriority.Camera.Value + 1,
-		function()
-			local cam = workspace.CurrentCamera
-			local up = self.Controller.GravityUp
+	"GravityCameraAlign",
+	Enum.RenderPriority.Camera.Value + 5,
+	function()
+		local cam = workspace.CurrentCamera
+		local up = self.Controller.GravityUp
 
-			local look = cam.CFrame.LookVector
-			local right = look:Cross(up).Unit
-			local correctedLook = up:Cross(right).Unit
+		-- Rotation that maps world-up → gravity-up
+		local worldUp = Vector3.yAxis
+		local axis = worldUp:Cross(up)
+		local dot = worldUp:Dot(up)
 
-			cam.CFrame = CFrame.fromMatrix(
-				cam.CFrame.Position,
-				right,
-				up,
-				-correctedLook
-			)
+		if axis.Magnitude < 1e-4 then
+			return -- already aligned
 		end
-	)
+
+		local angle = math.acos(math.clamp(dot, -1, 1))
+		local rot = CFrame.fromAxisAngle(axis.Unit, angle)
+
+		-- Apply rotation AFTER Roblox camera logic
+		cam.CFrame = rot * cam.CFrame
+	end
+)
+
 
 	return self
 end
