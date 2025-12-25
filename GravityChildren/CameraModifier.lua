@@ -1,6 +1,5 @@
 local UIS = game:GetService("UserInputService")
 local UserGameSettings = UserSettings():GetService("UserGameSettings")
-local RunService = game:GetService("RunService")
 
 local CameraModifier = {}
 CameraModifier.__index = CameraModifier
@@ -17,7 +16,7 @@ function CameraModifier.new(player, controller)
 	self.DefaultMouseBehavior = basecam.UpdateMouseBehavior
 	self.DefaultGetUpVector = basecam.GetUpVector
 
-	-- Mouse behavior fix
+	-- Mouse behavior (do NOT touch yaw)
 	function basecam.UpdateMouseBehavior(this)
 		UserGameSettings.RotationType = Enum.RotationType.MovementRelative
 
@@ -30,36 +29,10 @@ function CameraModifier.new(player, controller)
 		end
 	end
 
-	-- Gravity-aligned up vector
+	-- 🔥 THIS IS THE KEY
 	function basecam.GetUpVector()
-		return self.Controller.GravityUp
+		return controller.GravityUp
 	end
-
-	-- Camera roll alignment
-	RunService:BindToRenderStep(
-	"GravityCameraAlign",
-	Enum.RenderPriority.Camera.Value + 5,
-	function()
-		local cam = workspace.CurrentCamera
-		local up = self.Controller.GravityUp
-
-		-- Rotation that maps world-up → gravity-up
-		local worldUp = Vector3.yAxis
-		local axis = worldUp:Cross(up)
-		local dot = worldUp:Dot(up)
-
-		if axis.Magnitude < 1e-4 then
-			return -- already aligned
-		end
-
-		local angle = math.acos(math.clamp(dot, -1, 1))
-		local rot = CFrame.fromAxisAngle(axis.Unit, angle)
-
-		-- Apply rotation AFTER Roblox camera logic
-		cam.CFrame = rot * cam.CFrame
-	end
-)
-
 
 	return self
 end
@@ -67,7 +40,6 @@ end
 function CameraModifier:Destroy()
 	self.BaseClass.UpdateMouseBehavior = self.DefaultMouseBehavior
 	self.BaseClass.GetUpVector = self.DefaultGetUpVector
-	RunService:UnbindFromRenderStep("GravityCameraAlign")
 end
 
 return CameraModifier
